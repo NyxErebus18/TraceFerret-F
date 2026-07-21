@@ -1,0 +1,6 @@
+{
+  "name": "TraceFerret",
+  "description": "Embedded firmware debugging platform for STM32 firmware projects with live tracing and validation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
