@@ -175,6 +175,16 @@ OPENAI_API_KEY
 as an environment variable.
 
 ---
+##How Codex & GPT-5.6 were used:
+
+TraceFerret was designed as a two-stage AI workflow to separate code understanding from engineering reasoning.
+
+Codex was used for repository understanding, dependency tracing, firmware architecture analysis, interrupt mapping, root-cause localization, patch generation, and regression test generation.
+GPT-5.6 was used to synthesize the technical analysis into a structured engineering investigation, generating confidence scores, investigation timelines, evidence summaries, validation results, and the final engineering report.
+The frontend was built to visualize this workflow as a guided investigation rather than a conversational chatbot, making each stage of the debugging process transparent and explainable.
+Codex also accelerated development by assisting with implementation, code generation, architecture iteration, debugging, and refactoring throughout the project.
+
+---
 
 ## Future Improvements
 
