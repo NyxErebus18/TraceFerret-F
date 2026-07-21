@@ -1,10 +1,5 @@
-import express from "express";
-import path from "path";
-import { createServer as createViteServer } from "vite";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import OpenAI from "openai";
-import dotenv from "dotenv";
-
-dotenv.config();
 
 // Standardized fallback mock data in case OPENAI_API_KEY is missing or API call fails
 const FALLBACK_DATA = {
@@ -204,52 +199,32 @@ You must synthesize the Codex technical analysis into the structured AnalysisPay
   return JSON.parse(gptOutputStr);
 }
 
-async function startServer() {
-  const app = express();
-  const PORT = 3000;
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Enable CORS
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
+  );
 
-  app.use(express.json());
-
-  // OpenAI Responses API endpoint handling both GET and POST /api/analyze
-  const handleAnalyze = async (req: express.Request, res: express.Response) => {
-    const client = getOpenAIClient();
-
-    if (!client) {
-      console.warn("OPENAI_API_KEY is not configured in process.env. Returning fallback telemetry data.");
-      return res.json(FALLBACK_DATA);
-    }
-
-    try {
-      const payload = await runOpenAIAnalysisPipeline(client, req.body);
-      return res.json(payload);
-    } catch (error) {
-      console.error("OpenAI API call failed, falling back to structured telemetry data:", error);
-      return res.json(FALLBACK_DATA);
-    }
-  };
-
-  app.get("/api/analyze", handleAnalyze);
-  app.post("/api/analyze", handleAnalyze);
-
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production") {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: "spa",
-    });
-    app.use(vite.middlewares);
-  } else {
-    const distPath = path.join(process.cwd(), "dist");
-    app.use(express.static(distPath));
-    app.get("*all", (req, res) => {
-      res.sendFile(path.join(distPath, "index.html"));
-    });
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  const client = getOpenAIClient();
+
+  if (!client) {
+    console.warn("OPENAI_API_KEY is not configured in process.env. Returning fallback telemetry data.");
+    return res.status(200).json(FALLBACK_DATA);
+  }
+
+  try {
+    const payload = await runOpenAIAnalysisPipeline(client, req.body);
+    return res.status(200).json(payload);
+  } catch (error) {
+    console.error("OpenAI API call failed, falling back to structured telemetry data:", error);
+    return res.status(200).json(FALLBACK_DATA);
+  }
 }
-
-startServer();
-
